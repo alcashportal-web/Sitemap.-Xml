@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>The Educator - Complete School Management System</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- SheetJS for Excel/CSV -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            min-height: 100vh;
+            padding: 16px;
+        }
+        .app-container {
+            max-width: 550px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 48px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            min-height: 650px;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6e 100%);
+            color: white;
+            padding: 20px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .header h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+        .header h1 i { margin-right: 8px; color: #ffd700; }
+        .header p { font-size: 0.7rem; opacity: 0.85; margin-top: 4px; }
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            display: inline-block;
+            margin-top: 8px;
+        }
+        .content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #f8fafc;
+            max-height: 65vh;
+        }
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 18px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #eef2ff;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 12px;
+        }
+        .form-group { margin-bottom: 12px; }
+        label { font-weight: 600; font-size: 0.7rem; color: #475569; display: block; margin-bottom: 4px; }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 24px;
+            font-size: 0.8rem;
+            outline: none;
+            transition: 0.2s;
+        }
+        input:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        button {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e3a5f 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: 0.2s;
+        }
+        button:active { transform: scale(0.97); }
+        button.secondary { background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; }
+        button.danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        button.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .btn-sm { width: auto; padding: 6px 12px; font-size: 0.7rem; display: inline-block; margin: 4px; }
+        .flex-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .role-buttons { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .role-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.75rem;
+            transition: 0.2s;
+        }
+        .role-btn.active { background: linear-gradient(135deg, #3b82f6 0%, #1e3a5f 100%); color: white; }
+        .item-card {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .badge {
+            background: #dbeafe;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: inline-block;
+            margin: 4px 4px 0 0;
+        }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fed7aa; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-card {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-radius: 20px;
+            padding: 12px;
+            text-align: center;
+        }
+        .stat-number { font-size: 1.5rem; font-weight: 800; color: #1e3a5f; }
+        .message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-bottom: 12px;
+            border-left: 4px solid #10b981;
+            animation: fadeIn 0.3s;
+        }
+        .error { background: #fee2e2; color: #991b1b; border-left-color: #ef4444; }
+        .search-box { margin-bottom: 12px; }
+        .file-upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 20px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: 0.2s;
+            background: #faf5ff;
+        }
+        .file-upload-area:hover { background: #f3e8ff; border-color: #3b82f6; }
+        .progress-bar { height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+        .progress-fill { height: 100%; background: #3b82f6; border-radius: 10px; transition: width 0.3s; }
+        .task-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8fafc; border-radius: 16px; margin-bottom: 8px; }
+        .task-done { text-decoration: line-through; opacity: 0.6; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 480px) { .app-container { border-radius: 32px; } .role-btn { font-size: 0.7rem; } }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: white; padding: 24px; border-radius: 28px; max-width: 90%; max-height: 80vh; overflow-y: auto; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header" id="logoClickArea">
+        <h1><i class="fas fa-graduation-cap"></i> The Educator</h1>
+        <p>Complete School Management System</p>
+        <div id="userInfoDisplay" class="user-badge"><i class="fas fa-user-circle"></i> Not Logged In</div>
+    </div>
+    <div class="content" id="mainContent"></div>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">Edit</h3>
+        <div id="modalForm"></div>
+        <div class="flex-row" style="margin-top: 16px;">
+            <button id="saveEditBtn" class="success">Save</button>
+            <button id="cancelEditBtn" class="secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ======================== DATA STRUCTURE ========================
+    let schools = [{ id: "school1", name: "The Educator", code: "EDU001" }];
+    let admins = [{ id: "admin1", username: "admin", password: "admin123", schoolId: "school1", name: "School Admin" }];
+    let teachers = [{ id: "t1", name: "Mr. David Miller", email: "teacher@demo.com", password: "teacher123", schoolId: "school1" }];
+    let students = [
+        { id: "s1", name: "Emma Watson", rollNumber: "S101", password: "student123", className: "10th A", schoolId: "school1", attendance: {}, fines: [], tasks: [] },
+        { id: "s2", name: "James Wilson", rollNumber: "S102", password: "student123", className: "10th A", schoolId: "school1", attendance: {}, fines: [], tasks: [] },
+        { id: "s3", name: "Sophia Lee", rollNumber: "S201", password: "student123", className: "9th A", schoolId: "school1", attendance: {}, fines: [], tasks: [] }
+    ];
+    let classesList = [{ id: "c1", name: "10th A", schoolId: "school1" }, { id: "c2", name: "9th A", schoolId: "school1" }];
+    let homeworks = [
+        { id: "hw1", className: "10th A", subject: "Mathematics", description: "Solve Ex 5.1", dueDate: "2026-04-25", teacherId: "t1", schoolId: "school1", completedBy: [] }
+    ];
+    let events = [{ id: "e1", title: "Final Exams", date: "2026-05-10", type: "exam", schoolId: "school1" }];
+    let fines = [{ id: "f1", studentId: "s1", amount: 500, reason: "Library fine", paid: false, schoolId: "school1" }];
+    let paymentInfo = { jazzcash: "03001234567", easypaisa: "03111234567", bank: "HBL 1234-5678" };
+    let chats = [];
+    let attendanceRecords = [];
+    const SUPER_ADMIN = { username: "superadmin", password: "super123" };
+    let currentUser = null;
+    let editingItem = null;
+    let clickCount = 0, clickTimer = null;
+    
+    function saveData() { localStorage.setItem("educatorData", JSON.stringify({ schools, admins, teachers, students, classesList, homeworks, events, fines, paymentInfo, chats, attendanceRecords })); }
+    function loadData() {
+        const saved = localStorage.getItem("educatorData");
+        if (saved) { 
+            try { 
+                const d = JSON.parse(saved); 
+                schools = d.schools || schools; 
+                admins = d.admins || admins; 
+                teachers = d.teachers || teachers; 
+                students = d.students || students; 
+                classesList = d.classesList || classesList; 
+                homeworks = d.homeworks || homeworks; 
+                events = d.events || events; 
+                fines = d.fines || fines; 
+                paymentInfo = d.paymentInfo || paymentInfo; 
+                chats = d.chats || chats; 
+                attendanceRecords = d.attendanceRecords || attendanceRecords; 
+            } catch(e) {} 
+        }
+        if(admins.length===0) admins = [{ id: "admin1", username: "admin", password: "admin123", schoolId: "school1", name: "School Admin" }];
+    }
+    loadData();
+    
+    function showMessage(msg, isError = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isError ? 'error' : ''}`;
+        msgDiv.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+        document.getElementById("mainContent").insertBefore(msgDiv, document.getElementById("mainContent").firstChild);
+        setTimeout(() => msgDiv.remove(), 3000);
+    }
+    
+    function renderScreen(html) { 
+        document.getElementById("mainContent").innerHTML = html; 
+        attachEventListeners(); // Re-attach all event listeners
+    }
+    
+    function updateHeader() {
+        if (currentUser) {
+            document.getElementById("userInfoDisplay").innerHTML = `<i class="fas fa-user-circle"></i> ${currentUser.type}: ${currentUser.name}`;
+        } else {
+            document.getElementById("userInfoDisplay").innerHTML = `<i class="fas fa-user-circle"></i> Not Logged In`;
+        }
+    }
+    
+    function logout() {
+        currentUser = null;
+        updateHeader();
+        renderLoginScreen();
+    }
+    
+    function attachEventListeners() {
+        // Delete buttons
+        document.querySelectorAll(".delete-class").forEach(btn => {
+            btn.removeEventListener('click', handleDeleteClass);
+            btn.addEventListener('click', handleDeleteClass);
+        });
+        
+        document.querySelectorAll(".delete-teacher").forEach(btn => {
+            btn.removeEventListener('click', handleDeleteTeacher);
+            btn.addEventListener('click', handleDeleteTeacher);
+        });
+        
+        document.querySelectorAll(".delete-student").forEach(btn => {
+            btn.removeEventListener('click', handleDeleteStudent);
+            btn.addEventListener('click', handleDeleteStudent);
+        });
+        
+        document.querySelectorAll(".edit-teacher").forEach(btn => {
+            btn.removeEventListener('click', handleEditTeacher);
+            btn.addEventListener('click', handleEditTeacher);
+        });
+        
+        document.querySelectorAll(".edit-student").forEach(btn => {
+            btn.removeEventListener('click', handleEditStudent);
+            btn.addEventListener('click', handleEditStudent);
+        });
+        
+        document.querySelectorAll(".delete-event").forEach(btn => {
+            btn.removeEventListener('click', handleDeleteEvent);
+            btn.addEventListener('click', handleDeleteEvent);
+        });
+        
+        document.querySelectorAll(".delete-school").forEach(btn => {
+            btn.removeEventListener('click', handleDeleteSchool);
+            btn.addEventListener('click', handleDeleteSchool);
+        });
+        
+        // Modal buttons
+        document.getElementById("cancelEditBtn")?.addEventListener("click", closeModal);
+        document.getElementById("saveEditBtn")?.addEventListener("click", saveEdit);
+    }
+    
+    // Modal functions
+    function openModal(title, formHtml, item = null) {
+        editingItem = item;
+        document.getElementById("modalTitle").textContent = title;
+        document.getElementById("modalForm").innerHTML = formHtml;
+        document.getElementById("editModal").style.display = "block";
+    }
+    
+    function closeModal() {
+        document.getElementById("editModal").style.display = "none";
+        editingItem = null;
+    }
+    
+    function saveEdit() {
+        if (!editingItem) return;
+        
+        if (editingItem.type === 'teacher
